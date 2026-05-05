@@ -18,7 +18,10 @@ const prisma = new PrismaClient();
 // Security & parsing
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'https://mens-clothes-store-fullstack.vercel.app'
+  ],
   credentials: true
 }));
 app.use(express.json());
