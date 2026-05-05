@@ -16,10 +16,12 @@ const app = express();
 const prisma = new PrismaClient();
 
 // Security & parsing
-app.use(helmet());
-app.use(cors({ 
+app.use(cors({
   origin: true,
-  credentials: true 
+  credentials: true
+}));
+app.use(helmet({
+  crossOriginResourcePolicy: false,
 }));
 app.use(express.json());
 app.use(cookieParser());
