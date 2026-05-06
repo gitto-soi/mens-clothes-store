@@ -8,7 +8,6 @@ export const register = async (req, res) => {
   try {
     const { email, password, phone, firstName, lastName, gender, dateOfBirth } = req.body;
 
-    // Check if user exists by email OR phone
     const existingUser = await prisma.user.findFirst({
       where: { OR: [{ email }, { phone }] }
     });
@@ -22,7 +21,7 @@ export const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const fullName = firstName && lastName ? `${firstName} ${lastName}` : ''; // 👈 fixed
+    const fullName = firstName && lastName ? `${firstName} ${lastName}` : '';
 
     const user = await prisma.user.create({
       data: {
@@ -40,23 +39,9 @@ export const register = async (req, res) => {
 
     const token = generateToken(user.id, user.email, user.role);
 
-    // res.cookie('token', token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'strict',
-    //   maxAge: 7 * 24 * 60 * 60 * 1000,
-    // });
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: true, // 👈 must be true for cross-domain
-      sameSite: 'none', // 👈 change from 'strict' to 'none' for cross-domain
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
     res.status(201).json({
       message: 'User created successfully',
-      toekn,
+      token, // ✅ fixed typo
       user: {
         id: user.id,
         email: user.email,
@@ -96,23 +81,9 @@ export const login = async (req, res) => {
 
     const token = generateToken(user.id, user.email, user.role);
 
-    // res.cookie('token', token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === 'production',
-    //   sameSite: 'strict',
-    //   maxAge: 7 * 24 * 60 * 60 * 1000,
-    // });
-
-    res.cookie('token', '', {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      expires: new Date(0)
-    });
-
     res.json({
       message: 'Login successful',
-      token,
+      token, // ✅ token in response
       user: {
         id: user.id,
         email: user.email,
@@ -132,7 +103,6 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
-  res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
   res.json({ message: 'Logged out successfully' });
 };
 
@@ -159,7 +129,6 @@ export const getMe = async (req, res) => {
   }
 };
 
-// Update user profile (first name, last name, phone, gender, date of birth)
 export const updateProfile = async (req, res) => {
   try {
     const { firstName, lastName, phone, gender, dateOfBirth } = req.body;
@@ -203,7 +172,6 @@ export const updateProfile = async (req, res) => {
   }
 };
 
-// Change password
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
