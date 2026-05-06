@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 export default function Login() {
   const navigate = useNavigate();
   const setUser = useAuthStore(state => state.setUser);
+  const clearCart = useCartStore(state => state.clearCart); // 👈 add this
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,7 +21,7 @@ export default function Login() {
       clearCart();
       useCartStore.persist.setOptions({ name: `cart-storage-${res.data.user.id}` });
       await useCartStore.persist.rehydrate();
-      setUser(res.data.user, res.data.token); // 👈 pass token
+      setUser(res.data.user, res.data.token);
       navigate('/home');
     } catch (err) {
       const msg = err.response?.data?.error || 'Login failed';
