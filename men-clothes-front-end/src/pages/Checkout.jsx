@@ -39,7 +39,9 @@ export default function Checkout() {
   const [qrString, setQrString] = useState('');
   const [qrExpiresAt, setQrExpiresAt] = useState(null);
   const [paymentStatus, setPaymentStatus] = useState('idle');
+  const [manualChecking, setManualChecking] = useState(false);
   const intervalRef = useRef(null);
+  const attemptsRef = useRef(0);
 
   useEffect(() => {
     if (items.length === 0 && !orderPlaced && paymentStatus !== 'waiting') {
@@ -49,11 +51,22 @@ export default function Checkout() {
 
   useEffect(() => { fetchAddresses(); }, []);
 
-  // ✅ Only poll when we have order + qrString + status is waiting
+  // ✅ Polling — keeps retrying even if Render is waking up (ignores network errors)
   useEffect(() => {
     if (!order || !qrString || paymentStatus !== 'waiting') return;
 
+    attemptsRef.current = 0;
+
     intervalRef.current = setInterval(async () => {
+      attemptsRef.current += 1;
+
+      // Stop polling after 10 minutes (200 * 3s)
+      if (attemptsRef.current > 200) {
+        clearInterval(intervalRef.current);
+        setPaymentStatus('expired');
+        return;
+      }
+
       try {
         const res = await api.get('/api/payment/status/' + order.id);
         const status = res.data.status;
@@ -69,8 +82,10 @@ export default function Checkout() {
           setPaymentStatus('expired');
           toast.error('QR code expired. Please generate a new one.');
         }
+        // PENDING → keep polling silently
       } catch (err) {
-        console.error('Poll error:', err);
+        // ✅ Don't stop polling on network error — Render might just be waking up
+        console.warn('Poll attempt ' + attemptsRef.current + ' failed, retrying...');
       }
     }, 3000);
 
@@ -124,6 +139,32 @@ export default function Checkout() {
       navigate('/shop');
     } catch (err) {
       toast.error('Failed to cancel order');
+    }
+  };
+
+  // ✅ Manual check — for when Render was asleep and auto-poll missed it
+  const handleManualCheck = async () => {
+    setManualChecking(true);
+    try {
+      const res = await api.get('/api/payment/status/' + order.id);
+      const status = res.data.status;
+      if (status === 'PAID') {
+        clearInterval(intervalRef.current);
+        setPaymentStatus('paid');
+        clearCart();
+        toast.success('Payment confirmed!');
+        setTimeout(() => navigate('/orders'), 2000);
+      } else if (status === 'EXPIRED') {
+        clearInterval(intervalRef.current);
+        setPaymentStatus('expired');
+        toast.error('QR expired. Please generate a new one.');
+      } else {
+        toast('Payment not received yet. Please wait a moment.', { icon: '⏳' });
+      }
+    } catch (err) {
+      toast.error('Server is waking up, please try again in 10 seconds.');
+    } finally {
+      setManualChecking(false);
     }
   };
 
@@ -266,13 +307,22 @@ export default function Checkout() {
                 </p>
               )}
               <p className="text-sm text-gray-500 mt-3 animate-pulse">Waiting for payment...</p>
+
+              {/* ✅ Manual check button — fallback for Render cold start delay */}
+              <button
+                onClick={handleManualCheck}
+                disabled={manualChecking}
+                className="mt-4 w-full border border-gray-300 text-gray-600 py-2.5 rounded-full text-sm font-medium hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                {manualChecking ? 'Checking...' : 'I already paid — check now'}
+              </button>
             </>
           )}
 
-          {/* ✅ Cancel button */}
+          {/* Cancel button */}
           <button
             onClick={handleCancelPayment}
-            className="mt-6 w-full border border-red-200 text-red-500 py-2.5 rounded-full text-sm font-medium hover:bg-red-50 transition"
+            className="mt-3 w-full border border-red-200 text-red-500 py-2.5 rounded-full text-sm font-medium hover:bg-red-50 transition"
           >
             Cancel Payment
           </button>
