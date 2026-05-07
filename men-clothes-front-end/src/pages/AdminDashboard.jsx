@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
   Package, ShoppingBag, TrendingUp, Plus, Edit2, Trash2, X,
-  Upload, Image as ImageIcon, Calendar
+  Upload, Calendar
 } from 'lucide-react';
 import api from '../lib/api';
+import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('products');
@@ -26,6 +27,7 @@ export default function AdminDashboard() {
   const [newImageFiles, setNewImageFiles] = useState([]);
   const [removedImageUrls, setRemovedImageUrls] = useState([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
+
   const [showCatBrandModal, setShowCatBrandModal] = useState(false);
   const [catBrandType, setCatBrandType] = useState('category');
   const [editingCatBrand, setEditingCatBrand] = useState(null);
@@ -39,17 +41,21 @@ export default function AdminDashboard() {
     try {
       const [productsRes, categoriesRes, brandsRes, ordersRes] = await Promise.all([
         api.get('/api/products'),
-        api.get('/api/products/categories'),
-        api.get('/api/products/brands'),
-        api.get('/api/orders/admin/all')
+        api.get('/api/categories'),        // ✅ fixed endpoint
+        api.get('/api/brands'),            // ✅ fixed endpoint
+        api.get('/api/orders/admin/all'),
       ]);
       setProducts(productsRes.data);
       setCategories(categoriesRes.data);
       setBrands(brandsRes.data);
       setAllOrders(ordersRes.data);
       setStats(prev => ({ ...prev, products: productsRes.data.length }));
-    } catch (err) { console.error(err); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filterAndComputeStats = () => {
@@ -64,17 +70,20 @@ export default function AdminDashboard() {
     }
     const filtered = allOrders.filter(order => new Date(order.createdAt) >= startDate);
     setFilteredOrders(filtered);
-    const ordersCount = filtered.length;
     const revenue = filtered
-      .filter(order => order.status === 'PAID' || order.status === 'DELIVERED')
+      .filter(o => o.status === 'PAID' || o.status === 'DELIVERED')
       .reduce((sum, o) => sum + o.totalAmount, 0);
-    setStats(prev => ({ ...prev, orders: ordersCount, revenue }));
+    setStats(prev => ({ ...prev, orders: filtered.length, revenue }));
   };
 
   const handleDeleteProduct = async (id) => {
-    if (confirm('Delete this product?')) {
-      await api.delete(`/api/products/${id}`);
+    if (!confirm('Delete this product?')) return;
+    try {
+      await api.delete('/api/products/' + id);
+      toast.success('Product deleted');
       fetchAllData();
+    } catch (err) {
+      toast.error('Failed to delete product');
     }
   };
 
@@ -114,7 +123,6 @@ export default function AdminDashboard() {
     e.target.value = '';
   };
 
-  // ✅ Fixed: use functional updater so existingImages.length is never stale
   const removeImage = (index) => {
     setExistingImages(prevExisting => {
       const isExisting = index < prevExisting.length;
@@ -138,7 +146,7 @@ export default function AdminDashboard() {
   const saveProduct = async () => {
     try {
       let parsedVariants;
-      try { parsedVariants = JSON.parse(variantsInput); } catch (e) { alert('Invalid JSON for variants'); return; }
+      try { parsedVariants = JSON.parse(variantsInput); } catch (e) { toast.error('Invalid JSON for variants'); return; }
 
       const formData = new FormData();
       formData.append('name', productForm.name);
@@ -151,23 +159,24 @@ export default function AdminDashboard() {
       if (removedImageUrls.length) {
         formData.append('removedImages', JSON.stringify(removedImageUrls));
       }
-      newImageFiles.forEach(file => {
-        formData.append('images', file);
-      });
+      newImageFiles.forEach(file => formData.append('images', file));
 
       if (editingProduct) {
-        await api.put(`/api/products/${editingProduct.id}`, formData);
+        await api.put('/api/products/' + editingProduct.id, formData);
+        toast.success('Product updated');
       } else {
         await api.post('/api/products', formData);
+        toast.success('Product created');
       }
       setShowProductModal(false);
       fetchAllData();
     } catch (err) {
       console.error(err);
-      alert('Failed to save product');
+      toast.error('Failed to save product');
     }
   };
 
+  // ✅ Fixed: now supports both create AND edit, uses correct endpoints
   const openCatBrandModal = (type, item = null) => {
     setCatBrandType(type);
     setEditingCatBrand(item);
@@ -176,33 +185,55 @@ export default function AdminDashboard() {
   };
 
   const saveCatBrand = async () => {
-    const endpoint = catBrandType === 'category' ? '/api/products/categories' : '/api/products/brands';
+    if (!catBrandName.trim()) { toast.error('Name is required'); return; }
+    const base = catBrandType === 'category' ? '/api/categories' : '/api/brands';
     try {
       if (editingCatBrand) {
-        alert('Editing not implemented. Delete and recreate.');
-        return;
+        await api.put(base + '/' + editingCatBrand.id, { name: catBrandName });
+        toast.success((catBrandType === 'category' ? 'Category' : 'Brand') + ' updated');
       } else {
-        await api.post(endpoint, { name: catBrandName });
+        await api.post(base, { name: catBrandName });
+        toast.success((catBrandType === 'category' ? 'Category' : 'Brand') + ' created');
       }
       setShowCatBrandModal(false);
       fetchAllData();
-    } catch (err) { alert('Failed to save'); }
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to save');
+    }
   };
 
+  // ✅ Fixed: uses correct endpoints + shows proper error if has products
   const deleteCatBrand = async (type, id) => {
-    if (!confirm(`Delete this ${type}? Products using it will be affected.`)) return;
-    const endpoint = type === 'category' ? `/api/products/categories/${id}` : `/api/products/brands/${id}`;
-    try { await api.delete(endpoint); fetchAllData(); } catch (err) { alert('Delete failed'); }
+    if (!confirm('Delete this ' + type + '?')) return;
+    const base = type === 'category' ? '/api/categories' : '/api/brands';
+    try {
+      await api.delete(base + '/' + id);
+      toast.success((type === 'category' ? 'Category' : 'Brand') + ' deleted');
+      fetchAllData();
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Delete failed');
+    }
   };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
-    await api.patch(`/api/orders/${orderId}/status`, { status: newStatus });
-    const [ordersRes] = await Promise.all([api.get('/api/orders/admin/all')]);
-    setAllOrders(ordersRes.data);
+    try {
+      await api.patch('/api/orders/' + orderId + '/status', { status: newStatus });
+      const res = await api.get('/api/orders/admin/all');
+      setAllOrders(res.data);
+      toast.success('Order status updated');
+    } catch (err) {
+      toast.error('Failed to update order status');
+    }
   };
 
   const getStatusBadge = (status) => {
-    const map = { PENDING: 'bg-yellow-100 text-yellow-800', PAID: 'bg-green-100 text-green-800', SHIPPED: 'bg-blue-100 text-blue-800', DELIVERED: 'bg-gray-100 text-gray-800', CANCELLED: 'bg-red-100 text-red-800' };
+    const map = {
+      PENDING: 'bg-yellow-100 text-yellow-800',
+      PAID: 'bg-green-100 text-green-800',
+      SHIPPED: 'bg-blue-100 text-blue-800',
+      DELIVERED: 'bg-gray-100 text-gray-800',
+      CANCELLED: 'bg-red-100 text-red-800',
+    };
     return map[status] || 'bg-gray-100 text-gray-800';
   };
 
@@ -218,13 +249,16 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-gray-50/40 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8"><h1 className="text-3xl font-light text-gray-900">Admin Dashboard</h1><div className="w-32 h-10 bg-gray-200 rounded-full animate-pulse"></div></div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-            {[...Array(3)].map((_, i) => <div key={i} className="bg-white rounded-2xl shadow-sm border p-5 animate-pulse"><div className="h-20 bg-gray-200 rounded"></div></div>)}
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-light text-gray-900">Admin Dashboard</h1>
+            <div className="w-32 h-10 bg-gray-200 rounded-full animate-pulse"></div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-            <div className="px-6 py-4 border-b"><div className="h-6 bg-gray-200 rounded w-24 animate-pulse"></div></div>
-            <div className="overflow-x-auto"><table className="min-w-full"><tbody>{[...Array(3)].map((_, i) => <tr key={i}><td colSpan="5"><div className="h-12 bg-gray-200 rounded my-2"></div></td></tr>)}</tbody></table></div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-sm border p-5 animate-pulse">
+                <div className="h-20 bg-gray-200 rounded"></div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -234,39 +268,51 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50/40 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-light text-gray-900">Admin Dashboard</h1>
           <div className="flex items-center gap-2 bg-white rounded-full pl-3 pr-2 py-1 shadow-sm border border-gray-200">
             <Calendar className="w-4 h-4 text-gray-500" />
-            <select value={period} onChange={(e) => setPeriod(e.target.value)} className="text-sm bg-transparent border-0 focus:ring-0 py-1.5">
+            <select value={period} onChange={e => setPeriod(e.target.value)} className="text-sm bg-transparent border-0 focus:ring-0 py-1.5">
               {periodOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
         </div>
 
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
           <div className="bg-white rounded-2xl shadow-sm border p-5 flex justify-between items-center">
-            <div><p className="text-sm text-gray-500">Products</p><p className="text-3xl font-semibold">{stats.products}</p></div><Package className="w-10 h-10 text-gray-400" />
+            <div><p className="text-sm text-gray-500">Products</p><p className="text-3xl font-semibold">{stats.products}</p></div>
+            <Package className="w-10 h-10 text-gray-400" />
           </div>
           <div className="bg-white rounded-2xl shadow-sm border p-5 flex justify-between items-center">
-            <div><p className="text-sm text-gray-500">Orders</p><p className="text-3xl font-semibold">{stats.orders}</p></div><ShoppingBag className="w-10 h-10 text-gray-400" />
+            <div><p className="text-sm text-gray-500">Orders</p><p className="text-3xl font-semibold">{stats.orders}</p></div>
+            <ShoppingBag className="w-10 h-10 text-gray-400" />
           </div>
           <div className="bg-white rounded-2xl shadow-sm border p-5 flex justify-between items-center">
-            <div><p className="text-sm text-gray-500">Revenue</p><p className="text-3xl font-semibold">${stats.revenue.toFixed(2)}</p></div><TrendingUp className="w-10 h-10 text-gray-400" />
+            <div><p className="text-sm text-gray-500">Revenue</p><p className="text-3xl font-semibold">${stats.revenue.toFixed(2)}</p></div>
+            <TrendingUp className="w-10 h-10 text-gray-400" />
           </div>
         </div>
 
+        {/* Tabs */}
         <div className="border-b border-gray-200 mb-6 flex gap-6">
-          <button onClick={() => setActiveTab('products')} className={`pb-2 text-sm font-medium ${activeTab === 'products' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500'}`}>Products</button>
-          <button onClick={() => setActiveTab('categories')} className={`pb-2 text-sm font-medium ${activeTab === 'categories' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500'}`}>Categories</button>
-          <button onClick={() => setActiveTab('brands')} className={`pb-2 text-sm font-medium ${activeTab === 'brands' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500'}`}>Brands</button>
-          <button onClick={() => setActiveTab('orders')} className={`pb-2 text-sm font-medium ${activeTab === 'orders' ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500'}`}>Orders</button>
+          {['products', 'categories', 'brands', 'orders'].map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={'pb-2 text-sm font-medium capitalize ' + (activeTab === tab ? 'border-b-2 border-gray-900 text-gray-900' : 'text-gray-500')}>
+              {tab}
+            </button>
+          ))}
         </div>
 
+        {/* Products Tab */}
         {activeTab === 'products' && (
           <div>
             <div className="flex justify-end mb-4">
-              <button onClick={() => openProductModal()} className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm flex items-center gap-1"><Plus size={16} /> Add Product</button>
+              <button onClick={() => openProductModal()} className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm flex items-center gap-1">
+                <Plus size={16} /> Add Product
+              </button>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-100">
@@ -303,40 +349,81 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Categories Tab */}
         {activeTab === 'categories' && (
           <div>
-            <div className="flex justify-end mb-4"><button onClick={() => openCatBrandModal('category')} className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm flex items-center gap-1"><Plus size={16} /> Add Category</button></div>
+            <div className="flex justify-end mb-4">
+              <button onClick={() => openCatBrandModal('category')} className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm flex items-center gap-1">
+                <Plus size={16} /> Add Category
+              </button>
+            </div>
             <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
               <table className="min-w-full divide-y divide-gray-100">
-                <thead><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead>
-                <tbody>
+                <thead className="bg-gray-50/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
                   {categories.map(cat => (
-                    <tr key={cat.id}><td className="px-6 py-4 text-sm">{cat.name}</td><td className="px-6 py-4 text-right"><button onClick={() => deleteCatBrand('category', cat.id)} className="text-red-600 hover:text-red-900"><Trash2 size={16} /></button></td></tr>
+                    <tr key={cat.id}>
+                      <td className="px-6 py-4 text-sm">{cat.name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{cat._count?.products ?? 0} products</td>
+                      <td className="px-6 py-4 text-right flex justify-end gap-3">
+                        <button onClick={() => openCatBrandModal('category', cat)} className="text-indigo-600 hover:text-indigo-900"><Edit2 size={16} /></button>
+                        <button onClick={() => deleteCatBrand('category', cat.id)} className="text-red-600 hover:text-red-900"><Trash2 size={16} /></button>
+                      </td>
+                    </tr>
                   ))}
-                  {categories.length === 0 && <tr><td colSpan="2" className="px-6 py-8 text-center text-gray-500">No categories</td></tr>}
+                  {categories.length === 0 && (
+                    <tr><td colSpan="3" className="px-6 py-8 text-center text-gray-500">No categories</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
+        {/* Brands Tab */}
         {activeTab === 'brands' && (
           <div>
-            <div className="flex justify-end mb-4"><button onClick={() => openCatBrandModal('brand')} className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm flex items-center gap-1"><Plus size={16} /> Add Brand</button></div>
+            <div className="flex justify-end mb-4">
+              <button onClick={() => openCatBrandModal('brand')} className="bg-gray-900 text-white px-4 py-2 rounded-full text-sm flex items-center gap-1">
+                <Plus size={16} /> Add Brand
+              </button>
+            </div>
             <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
               <table className="min-w-full divide-y divide-gray-100">
-                <thead><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead>
-                <tbody>
+                <thead className="bg-gray-50/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
                   {brands.map(b => (
-                    <tr key={b.id}><td className="px-6 py-4 text-sm">{b.name}</td><td className="px-6 py-4 text-right"><button onClick={() => deleteCatBrand('brand', b.id)} className="text-red-600 hover:text-red-900"><Trash2 size={16} /></button></td></tr>
+                    <tr key={b.id}>
+                      <td className="px-6 py-4 text-sm">{b.name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{b._count?.products ?? 0} products</td>
+                      <td className="px-6 py-4 text-right flex justify-end gap-3">
+                        <button onClick={() => openCatBrandModal('brand', b)} className="text-indigo-600 hover:text-indigo-900"><Edit2 size={16} /></button>
+                        <button onClick={() => deleteCatBrand('brand', b.id)} className="text-red-600 hover:text-red-900"><Trash2 size={16} /></button>
+                      </td>
+                    </tr>
                   ))}
-                  {brands.length === 0 && <tr><td colSpan="2" className="px-6 py-8 text-center text-gray-500">No brands</td></tr>}
+                  {brands.length === 0 && (
+                    <tr><td colSpan="3" className="px-6 py-8 text-center text-gray-500">No brands</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         )}
 
+        {/* Orders Tab */}
         {activeTab === 'orders' && (
           <div className="space-y-4">
             {filteredOrders.length === 0 ? (
@@ -346,19 +433,28 @@ export default function AdminDashboard() {
                 <div key={order.id} className="bg-white rounded-2xl shadow-sm border p-5">
                   <div className="flex flex-wrap justify-between items-start gap-3">
                     <div>
-                      <p className="text-sm text-gray-500">Order #{order.id.slice(0,8)}</p>
+                      <p className="text-sm text-gray-500">Order #{order.id.slice(0, 8)}</p>
                       <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleString()}</p>
                       <p className="text-sm mt-1">Customer: {order.user?.name || order.user?.email} ({order.user?.phone})</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <select className={`text-sm rounded-full px-3 py-1 border-0 focus:ring-1 ${getStatusBadge(order.status)}`} value={order.status} onChange={e => handleUpdateOrderStatus(order.id, e.target.value)} disabled={order.status === 'DELIVERED' || order.status === 'CANCELLED'}>
-                        <option value="PENDING">Pending</option><option value="PAID">Paid</option><option value="SHIPPED">Shipped</option><option value="DELIVERED">Delivered</option><option value="CANCELLED">Cancelled</option>
+                      <select
+                        className={'text-sm rounded-full px-3 py-1 border-0 focus:ring-1 ' + getStatusBadge(order.status)}
+                        value={order.status}
+                        onChange={e => handleUpdateOrderStatus(order.id, e.target.value)}
+                        disabled={order.status === 'DELIVERED' || order.status === 'CANCELLED'}
+                      >
+                        <option value="PENDING">Pending</option>
+                        <option value="PAID">Paid</option>
+                        <option value="SHIPPED">Shipped</option>
+                        <option value="DELIVERED">Delivered</option>
+                        <option value="CANCELLED">Cancelled</option>
                       </select>
                       <span className="font-semibold text-lg">${order.totalAmount.toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="text-sm text-gray-500 mt-2">
-                    Items: {order.items?.map(i => `${i.product.name} (${i.variant.size}/${i.variant.color}) x${i.quantity}`).join(', ') || 'No items'}
+                    Items: {order.items?.map(i => i.product.name + ' (' + i.variant.size + '/' + i.variant.color + ') x' + i.quantity).join(', ') || 'No items'}
                   </div>
                 </div>
               ))
@@ -370,32 +466,34 @@ export default function AdminDashboard() {
         {showProductModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-              <div className="flex justify-between items-center mb-4"><h2 className="text-xl font-medium">{editingProduct ? 'Edit Product' : 'Add Product'}</h2><button onClick={() => setShowProductModal(false)}><X /></button></div>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-medium">{editingProduct ? 'Edit Product' : 'Add Product'}</h2>
+                <button onClick={() => setShowProductModal(false)}><X /></button>
+              </div>
               <div className="space-y-4">
                 <input type="text" placeholder="Product name" className="w-full border rounded-lg px-3 py-2" value={productForm.name} onChange={e => setProductForm({ ...productForm, name: e.target.value })} />
                 <textarea placeholder="Description" className="w-full border rounded-lg px-3 py-2" rows="3" value={productForm.description} onChange={e => setProductForm({ ...productForm, description: e.target.value })} />
                 <input type="number" placeholder="Price" className="w-full border rounded-lg px-3 py-2" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: e.target.value })} />
                 <select className="w-full border rounded-lg px-3 py-2" value={productForm.categoryId} onChange={e => setProductForm({ ...productForm, categoryId: e.target.value })}>
-                  <option value="">Select category</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  <option value="">Select category</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
                 <select className="w-full border rounded-lg px-3 py-2" value={productForm.brandId} onChange={e => setProductForm({ ...productForm, brandId: e.target.value })}>
-                  <option value="">Select brand</option>{brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  <option value="">Select brand</option>
+                  {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
-                <div><label className="block text-sm font-medium mb-1">Variants (JSON array)</label><textarea rows="5" className="w-full font-mono text-sm border rounded-lg px-3 py-2" value={variantsInput} onChange={e => setVariantsInput(e.target.value)} /><p className="text-xs text-gray-500 mt-1">Example: {`[{"size":"M","color":"Black","stock":10,"sku":"SKU123"}]`}</p></div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Variants (JSON array)</label>
+                  <textarea rows="5" className="w-full font-mono text-sm border rounded-lg px-3 py-2" value={variantsInput} onChange={e => setVariantsInput(e.target.value)} />
+                  <p className="text-xs text-gray-500 mt-1">Example: {`[{"size":"M","color":"Black","stock":10,"sku":"SKU123"}]`}</p>
+                </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Images</label>
                   <div className="flex flex-wrap gap-3 mb-3">
                     {imagePreviewUrls.map((url, idx) => (
                       <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                        <img src={url} className="w-full h-full object-cover" />
-                        {/* ✅ Fixed: just pass idx, removeImage handles the rest */}
-                        <button
-                          type="button"
-                          onClick={() => removeImage(idx)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                        >
-                          ×
-                        </button>
+                        <img src={url} className="w-full h-full object-cover" alt="" />
+                        <button type="button" onClick={() => removeImage(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
                       </div>
                     ))}
                     <label className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-gray-400">
@@ -404,7 +502,7 @@ export default function AdminDashboard() {
                       <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageSelect} />
                     </label>
                   </div>
-                  <p className="text-xs text-gray-500">Click + to add new images. Click × to remove (existing images will be deleted).</p>
+                  <p className="text-xs text-gray-500">Click + to add images. Click × to remove.</p>
                 </div>
               </div>
               <div className="flex justify-end gap-3 mt-6">
@@ -415,12 +513,32 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Category/Brand Add Modal */}
+        {/* Category/Brand Modal */}
         {showCatBrandModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6"><h2 className="text-xl font-medium mb-4">{editingCatBrand ? 'Edit' : 'Add'} {catBrandType === 'category' ? 'Category' : 'Brand'}</h2><input type="text" placeholder="Name" className="w-full border rounded-lg px-3 py-2 mb-4" value={catBrandName} onChange={e => setCatBrandName(e.target.value)} /><div className="flex justify-end gap-3"><button onClick={() => setShowCatBrandModal(false)} className="px-4 py-2 border rounded-full">Cancel</button><button onClick={saveCatBrand} className="px-4 py-2 bg-gray-900 text-white rounded-full">Save</button></div></div>
+            <div className="bg-white rounded-2xl max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-medium">
+                  {editingCatBrand ? 'Edit' : 'Add'} {catBrandType === 'category' ? 'Category' : 'Brand'}
+                </h2>
+                <button onClick={() => setShowCatBrandModal(false)}><X /></button>
+              </div>
+              <input
+                type="text"
+                placeholder="Name"
+                className="w-full border rounded-lg px-3 py-2 mb-4"
+                value={catBrandName}
+                onChange={e => setCatBrandName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && saveCatBrand()}
+              />
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setShowCatBrandModal(false)} className="px-4 py-2 border rounded-full">Cancel</button>
+                <button onClick={saveCatBrand} className="px-4 py-2 bg-gray-900 text-white rounded-full">Save</button>
+              </div>
+            </div>
           </div>
         )}
+
       </div>
     </div>
   );
