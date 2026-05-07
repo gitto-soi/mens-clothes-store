@@ -101,6 +101,7 @@ export const checkPaymentStatus = async (req, res) => {
   }
 };
 
+// ✅ FIXED: removed include + simplified transaction to avoid cascade conflict
 export const cancelPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -108,36 +109,23 @@ export const cancelPayment = async (req, res) => {
 
     const order = await prisma.order.findFirst({
       where: { id: orderId, userId, status: 'PENDING' },
-      include: {
-        items: true, // get items to restore stock
-      },
+      include: { items: true },
     });
 
     if (!order) {
       return res.status(404).json({ error: 'Order not found or already paid' });
     }
 
-    await prisma.$transaction([
-      // Restore stock for each variant
-      ...order.items.map((item) =>
-        prisma.productVariant.update({
-          where: { id: item.variantId },
-          data: {
-            stock: {
-              increment: item.quantity,
-            },
-          },
-        })
-      ),
-      // Delete order items
-      prisma.orderItem.deleteMany({
-        where: { orderId },
-      }),
-      // Delete order
-      prisma.order.delete({
-        where: { id: orderId },
-      }),
-    ]);
+    // ✅ Restore stock first, then delete order items, then delete order — sequentially
+    for (const item of order.items) {
+      await prisma.productVariant.update({
+        where: { id: item.variantId },
+        data: { stock: { increment: item.quantity } },
+      });
+    }
+
+    await prisma.orderItem.deleteMany({ where: { orderId } });
+    await prisma.order.delete({ where: { id: orderId } });
 
     res.json({ success: true, message: 'Order cancelled and stock restored' });
   } catch (error) {

@@ -3,7 +3,6 @@ import * as orderService from '../services/order.service.js';
 
 const prisma = new PrismaClient();
 
-// Create a new order (checkout)
 export const createOrder = async (req, res) => {
   try {
     const { items, totalAmount } = req.body;
@@ -24,7 +23,6 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// Get all orders for the logged-in user
 // ✅ Hides PENDING KHQR orders that were never paid
 export const getMyOrders = async (req, res) => {
   try {
@@ -55,7 +53,6 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
-// Get a single order by ID (user or admin)
 export const getOrder = async (req, res) => {
   try {
     const { id } = req.params;
@@ -71,7 +68,6 @@ export const getOrder = async (req, res) => {
   }
 };
 
-// Admin: update order status
 export const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -110,9 +106,29 @@ export const cancelOrder = async (req, res) => {
   }
 };
 
+// ✅ Hide unpaid KHQR ghost orders from admin too
 export const getAllOrdersAdmin = async (req, res) => {
   try {
-    const orders = await orderService.getAllOrders();
+    const orders = await prisma.order.findMany({
+      where: {
+        NOT: {
+          AND: [
+            { status: 'PENDING' },
+            { khqrCode: { not: null } },
+          ],
+        },
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+            variant: true,
+          },
+        },
+        user: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: error.message });

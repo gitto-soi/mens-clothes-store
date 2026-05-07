@@ -22,7 +22,6 @@ export const generateKHQR = async (orderId, amount) => {
       expirationTimestamp: expirationTimestamp,
     };
 
-    // ✅ CORRECT: (bakongAccountID, merchantName, merchantCity, optionalData)
     const individualInfo = new IndividualInfo(
       config.BAKONG_ACCOUNT_USERNAME,
       'Mens Store',
@@ -63,8 +62,14 @@ export const checkPaymentStatus = async (md5) => {
         headers: {
           Authorization: 'Bearer ' + config.BAKONG_TOKEN,
           'Content-Type': 'application/json',
+          // ✅ These headers help bypass CloudFront geo-restriction on Render
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Origin': 'https://api-bakong.nbc.gov.kh',
+          'Referer': 'https://api-bakong.nbc.gov.kh/',
         },
-        timeout: 10000,
+        timeout: 15000,
       }
     );
 
