@@ -74,7 +74,7 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => res.json({ message: "✅ Men's Clothing Backend is LIVE!" }));
+app.get('/', (req, res) => res.json({ message: "Men's Clothing Backend is Deployed" }));
 
 // Global error handler (catches all errors and returns clean JSON)
 app.use((err, req, res, next) => {
