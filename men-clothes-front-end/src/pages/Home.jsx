@@ -32,7 +32,7 @@ export default function Home() {
         <div className="container-premium py-24 md:py-32 text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-mono font-light tracking-wide">Men's Fashion Collection</h1>
           <p className="text-xl text-brand-100 mt-4 font-mono">Discover timeless elegance and modern style</p>
-          <Link to="/shop" className="inline-block bg-white text-brand-900 px-8 py-3 rounded-full font-medium hover:bg-brand-50 transition mt-8 shadow-lg">Shop Now</Link>
+          {/* <Link to="/shop" className="inline-block bg-white text-brand-900 px-8 py-3 rounded-full font-mono font-medium font-semibold hover:bg-brand-50 transition mt-8 shadow-lg">Shop Now</Link> */}
         </div>
       </div>
 
