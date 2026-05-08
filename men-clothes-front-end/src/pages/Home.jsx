@@ -26,9 +26,9 @@ export default function Home() {
   return (
     <PageTransition>
 
-      {/* Hero Section */}
+      {/* Hero */}
       <div className="relative bg-gradient-to-r from-brand-900 via-brand-800 to-brand-900 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-5 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-5 mix-blend-overlay" />
         <div className="container-premium py-24 md:py-32 text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-serif font-light tracking-wide">Men's Fashion Collection</h1>
           <p className="text-xl text-brand-100 mt-4">Discover timeless elegance and modern style</p>
@@ -72,116 +72,139 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ABOUT */}
-      <div id="about" className="bg-premium-light py-20 border-t border-brand-100">
+      {/* ── ABOUT ── */}
+      <div id="about" className="bg-white py-24 border-t border-brand-100">
         <div className="container-premium">
 
-          <div className="text-center mb-16">
-            <span className="text-xs font-semibold tracking-widest text-brand-400 uppercase">Who We Are</span>
-            <h2 className="text-3xl md:text-4xl font-light text-brand-800 mt-2">Our Story</h2>
-            <div className="w-12 h-px bg-brand-300 mx-auto mt-4" />
+          {/* Top label */}
+          <div className="flex items-center gap-3 mb-16">
+            <div className="h-px bg-brand-200 w-12" />
+            <span className="text-xs tracking-[0.2em] uppercase text-brand-400 font-medium">About Us</span>
           </div>
 
-          <div className="max-w-3xl mx-auto text-center mb-16">
-            <p className="text-brand-600 text-lg leading-relaxed mb-5">
-              Founded with a passion for timeless design and superior craftsmanship, Men's Store brings a carefully curated selection of premium apparel to Cambodia. Every piece is chosen to elevate your wardrobe — blending classic elegance with modern comfort.
-            </p>
-            <p className="text-brand-500 text-base leading-relaxed">
-              We believe that dressing well is a form of self-respect. From refined basics to statement pieces, our collection is built for men who know exactly what they want.
-            </p>
-          </div>
+          {/* Main 2-col layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
-            {[
-              { num: '500+', label: 'Products Available' },
-              { num: '10K+', label: 'Happy Customers' },
-              { num: '100%', label: 'Authentic Pieces' },
-            ].map((s, i) => (
-              <div key={i} className="text-center py-8 px-6 bg-white border border-brand-100 rounded-xl shadow-sm">
-                <p className="text-3xl font-light text-brand-900 mb-1">{s.num}</p>
-                <p className="text-xs font-semibold tracking-widest text-brand-400 uppercase">{s.label}</p>
+            {/* Left — headline + story */}
+            <div>
+              <h2 className="text-4xl md:text-5xl font-serif font-light text-brand-900 leading-[1.15] mb-8">
+                Clothing that works<br />as hard as you do.
+              </h2>
+              <p className="text-brand-500 text-base leading-relaxed mb-5">
+                Men's Store was founded on one idea — that premium menswear shouldn't be complicated. We handpick every piece from brands that take quality seriously, so you can dress well without thinking too hard about it.
+              </p>
+              <p className="text-brand-400 text-sm leading-relaxed mb-10">
+                Based in Phnom Penh, we serve customers across Cambodia who want clothing that actually lasts. No fast fashion. No shortcuts. Just good pieces, honestly priced.
+              </p>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-brand-100">
+                {[
+                  { num: '500+', label: 'Products' },
+                  { num: '10K+', label: 'Customers' },
+                  { num: '100%', label: 'Authentic' },
+                ].map((s, i) => (
+                  <div key={i}>
+                    <p className="text-3xl font-light text-brand-900 tracking-tight">{s.num}</p>
+                    <p className="text-xs text-brand-400 uppercase tracking-widest mt-1">{s.label}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
 
-          {/* Values */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12 max-w-4xl mx-auto">
-            {[
-              {
-                icon: faMedal,
-                title: 'Premium Quality',
-                desc: 'Every item is carefully selected to meet the highest standards of quality and craftsmanship.',
-              },
-              {
-                icon: faTruck,
-                title: 'Fast Delivery',
-                desc: 'We ensure your orders arrive quickly and safely, right to your doorstep.',
-              },
-              {
-                icon: faHeadset,
-                title: 'Customer First',
-                desc: 'Your satisfaction is our priority — we are always here to help and support you.',
-              },
-            ].map((v, i) => (
-              <div key={i} className="flex flex-col items-center text-center p-6 bg-white border border-brand-100 rounded-xl shadow-sm">
-                <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center mb-4">
-                  <FontAwesomeIcon icon={v.icon} className="text-brand-600 text-lg" />
+            {/* Right — 3 values */}
+            <div className="space-y-0 divide-y divide-brand-100">
+              {[
+                {
+                  icon: faMedal,
+                  title: 'Premium Quality',
+                  desc: "Every item passes our quality check. We only carry pieces we'd buy ourselves.",
+                },
+                {
+                  icon: faTruck,
+                  title: 'Fast Delivery',
+                  desc: 'Orders packed and shipped the same day. We respect your time.',
+                },
+                {
+                  icon: faHeadset,
+                  title: 'Real Support',
+                  desc: "Talk to an actual person. No chatbots, no automated replies — just help.",
+                },
+              ].map((v, i) => (
+                <div key={i} className="flex items-start gap-5 py-7 group">
+                  <div className="w-10 h-10 rounded-lg bg-brand-50 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-brand-100 transition">
+                    <FontAwesomeIcon icon={v.icon} className="text-brand-600 text-sm" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-brand-800 mb-1">{v.title}</p>
+                    <p className="text-sm text-brand-400 leading-relaxed">{v.desc}</p>
+                  </div>
                 </div>
-                <h3 className="text-sm font-semibold text-brand-800 mb-2 tracking-wide uppercase">{v.title}</h3>
-                <p className="text-brand-500 text-sm leading-relaxed">{v.desc}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
+          </div>
         </div>
       </div>
 
-      {/* CONTACT */}
-      <div id="contact" className="bg-white py-16 border-t border-brand-100">
+      {/* ── CONTACT ── */}
+      <div id="contact" className="bg-brand-900 py-20">
         <div className="container-premium">
 
-          <div className="text-center mb-12">
-            <span className="text-xs font-semibold tracking-widest text-brand-400 uppercase">Reach Out</span>
-            <h2 className="text-3xl md:text-4xl font-light text-brand-800 mt-2">Get in Touch</h2>
-            <div className="w-12 h-px bg-brand-300 mx-auto mt-4" />
-            <p className="text-brand-500 text-base mt-4 max-w-md mx-auto">
-              We'd love to hear from you. Whether it's a question, feedback, or just to say hello — reach out anytime.
-            </p>
+          {/* Top label */}
+          <div className="flex items-center gap-3 mb-14">
+            <div className="h-px bg-brand-700 w-12" />
+            <span className="text-xs tracking-[0.2em] uppercase text-brand-400 font-medium">Contact</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            {[
-              {
-                icon: faEnvelope,
-                label: 'Email',
-                value: 'support@mensstore.com',
-                sub: 'Reply within 24 hours',
-              },
-              {
-                icon: faPhone,
-                label: 'Phone',
-                value: '+855 96 365 9813',
-                sub: 'Mon – Sat, 9am – 6pm',
-              },
-              {
-                icon: faLocationDot,
-                label: 'Location',
-                value: 'Phnom Penh, Cambodia',
-                sub: 'Visit us in store',
-              },
-            ].map((c, i) => (
-              <div key={i} className="flex flex-col items-center text-center p-8 bg-premium-light border border-brand-100 rounded-xl shadow-sm hover:shadow-md transition">
-                <div className="w-12 h-12 bg-white border border-brand-100 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                  <FontAwesomeIcon icon={c.icon} className="text-brand-600 text-lg" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+
+            {/* Left */}
+            <div>
+              <h2 className="text-4xl md:text-5xl font-serif font-light text-white leading-[1.15] mb-6">
+                Let's talk.
+              </h2>
+              <p className="text-brand-400 text-base leading-relaxed max-w-sm">
+                Got a question about an order, sizing, or anything else? We're quick to respond and happy to help.
+              </p>
+            </div>
+
+            {/* Right — contact list */}
+            <div className="space-y-0 divide-y divide-brand-800">
+              {[
+                {
+                  icon: faEnvelope,
+                  label: 'Email',
+                  value: 'support@mensstore.com',
+                  note: 'Reply within 24 hours',
+                },
+                {
+                  icon: faPhone,
+                  label: 'Phone',
+                  value: '+855 96 365 9813',
+                  note: 'Mon – Sat, 9am – 6pm',
+                },
+                {
+                  icon: faLocationDot,
+                  label: 'Location',
+                  value: 'Phnom Penh, Cambodia',
+                  note: 'Come visit us in store',
+                },
+              ].map((c, i) => (
+                <div key={i} className="flex items-center gap-5 py-6 group">
+                  <div className="w-10 h-10 rounded-lg bg-brand-800 flex items-center justify-center shrink-0 group-hover:bg-brand-700 transition">
+                    <FontAwesomeIcon icon={c.icon} className="text-brand-300 text-sm" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-brand-500 uppercase tracking-widest mb-0.5">{c.label}</p>
+                    <p className="text-white text-sm font-medium">{c.value}</p>
+                  </div>
+                  <p className="text-brand-600 text-xs hidden md:block">{c.note}</p>
                 </div>
-                <p className="text-xs font-semibold tracking-widest text-brand-400 uppercase mb-2">{c.label}</p>
-                <p className="text-brand-800 font-medium text-sm mb-1">{c.value}</p>
-                <p className="text-brand-400 text-xs">{c.sub}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
+          </div>
         </div>
       </div>
 
