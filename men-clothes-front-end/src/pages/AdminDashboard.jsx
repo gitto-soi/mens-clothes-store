@@ -1,36 +1,18 @@
 import { useEffect, useState, useMemo } from 'react';
 import {
   Package, ShoppingBag, TrendingUp, Plus, Edit2, Trash2, X,
-  Upload, Calendar, AlertTriangle, Search, Filter, ChevronDown, MapPin
+  Upload, Calendar, AlertTriangle, Search, Filter, ChevronDown
 } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
+import { Line, Bar } from 'react-chartjs-2';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Area, AreaChart, Cell
-} from 'recharts';
+  Chart as ChartJS, CategoryScale, LinearScale,
+  BarElement, PointElement, LineElement,
+  Title, Tooltip, Legend, Filler
+} from 'chart.js';
 
-const RevenueTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg">
-      <p className="font-medium">{label}</p>
-      <p className="text-green-400 mt-0.5">${payload[0].value.toFixed(2)}</p>
-    </div>
-  );
-};
-
-const TopProductTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg">
-      <p className="font-medium">{label}</p>
-      <p className="text-blue-400 mt-0.5">{payload[0].value} sold</p>
-    </div>
-  );
-};
-
-const BAR_COLORS = ['#111827', '#374151', '#4B5563', '#6B7280', '#9CA3AF'];
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('products');
@@ -98,7 +80,6 @@ export default function AdminDashboard() {
       setAllOrders(ordersRes.data);
       setStats(prev => ({ ...prev, products: productsRes.data.length }));
 
-      // ✅ Compute low stock from products variants
       const low = [];
       productsRes.data.forEach(p => {
         p.variants?.forEach(v => {
@@ -132,7 +113,6 @@ export default function AdminDashboard() {
       .reduce((sum, o) => sum + o.totalAmount, 0);
     setStats(prev => ({ ...prev, orders: filtered.length, revenue }));
 
-    // Daily revenue chart
     const revenueMap = {};
     filtered
       .filter(o => ['PAID', 'SHIPPED', 'DELIVERED'].includes(o.status))
@@ -142,7 +122,6 @@ export default function AdminDashboard() {
       });
     setDailyRevenue(Object.entries(revenueMap).map(([date, rev]) => ({ date, revenue: parseFloat(rev.toFixed(2)) })));
 
-    // Top products chart
     const productMap = {};
     filtered.forEach(o => {
       o.items?.forEach(item => {
@@ -300,6 +279,51 @@ export default function AdminDashboard() {
     { value: 'all', label: 'All time' },
   ];
 
+  const revenueChartData = {
+    labels: dailyRevenue.map(d => d.date),
+    datasets: [{
+      label: 'Revenue',
+      data: dailyRevenue.map(d => d.revenue),
+      borderColor: '#111827',
+      backgroundColor: 'rgba(17,24,39,0.08)',
+      fill: true,
+      tension: 0.4,
+      pointRadius: 3,
+      pointBackgroundColor: '#111827',
+    }]
+  };
+
+  const revenueChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '$' + ctx.parsed.y.toFixed(2) } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#9ca3af' } },
+      y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 }, color: '#9ca3af', callback: v => '$' + v } }
+    }
+  };
+
+  const topProductsChartData = {
+    labels: topProducts.map(p => p.name),
+    datasets: [{
+      label: 'Sold',
+      data: topProducts.map(p => p.qty),
+      backgroundColor: ['#111827', '#374151', '#4B5563', '#6B7280', '#9CA3AF'],
+      borderRadius: 6,
+    }]
+  };
+
+  const topProductsChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.x + ' sold' } } },
+    scales: {
+      x: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 }, color: '#9ca3af' } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#374151' } }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -377,27 +401,15 @@ export default function AdminDashboard() {
                 ${stats.revenue.toFixed(2)} total
               </span>
             </div>
-            {dailyRevenue.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={dailyRevenue} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#111827" stopOpacity={0.12} />
-                      <stop offset="95%" stopColor="#111827" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} tickFormatter={v => '$' + v} axisLine={false} tickLine={false} width={45} />
-                  <Tooltip content={<RevenueTooltip />} />
-                  <Area type="monotone" dataKey="revenue" stroke="#111827" strokeWidth={2} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 4, fill: '#111827' }} />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-56 flex items-center justify-center">
-                <p className="text-sm text-gray-400">No revenue data for this period</p>
-              </div>
-            )}
+            <div className="h-56">
+              {dailyRevenue.length > 0 ? (
+                <Line data={revenueChartData} options={revenueChartOptions} />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-sm text-gray-400">No revenue data for this period</p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -410,23 +422,15 @@ export default function AdminDashboard() {
                 Top {topProducts.length}
               </span>
             </div>
-            {topProducts.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={topProducts} layout="vertical" margin={{ top: 0, right: 10, bottom: 0, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#374151' }} width={110} axisLine={false} tickLine={false} />
-                  <Tooltip content={<TopProductTooltip />} />
-                  <Bar dataKey="qty" radius={[0, 6, 6, 0]} maxBarSize={28}>
-                    {topProducts.map((_, idx) => <Cell key={idx} fill={BAR_COLORS[idx % BAR_COLORS.length]} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-56 flex items-center justify-center">
-                <p className="text-sm text-gray-400">No sales data for this period</p>
-              </div>
-            )}
+            <div className="h-56">
+              {topProducts.length > 0 ? (
+                <Bar data={topProductsChartData} options={topProductsChartOptions} />
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-sm text-gray-400">No sales data for this period</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -792,8 +796,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div className="p-6 space-y-5">
-
-                {/* Customer */}
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">👤 Customer</p>
                   <p className="text-sm font-semibold text-gray-900">
@@ -803,7 +805,6 @@ export default function AdminDashboard() {
                   {selectedOrder.user?.phone && <p className="text-sm text-gray-500 mt-0.5">📞 {selectedOrder.user.phone}</p>}
                 </div>
 
-                {/* Items */}
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">📦 Items</p>
                   <div className="space-y-3">
@@ -823,13 +824,11 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Total */}
                 <div className="flex justify-between items-center pt-3 border-t border-gray-100">
                   <p className="text-sm font-semibold text-gray-600">Total</p>
                   <p className="text-xl font-bold text-gray-900">${selectedOrder.totalAmount.toFixed(2)}</p>
                 </div>
 
-                {/* Update Status */}
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Update Status</p>
                   <select
