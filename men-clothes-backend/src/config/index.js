@@ -20,6 +20,10 @@ export const config = {
   BAKONG_ACCOUNT_NAME: process.env.BAKONG_ACCOUNT_NAME,
   BAKONG_PHONE_NUMBER: process.env.BAKONG_PHONE_NUMBER, // ✅ ADD THIS
   NBC_API_URL: process.env.NBC_API_URL || 'https://api-bakong.nbc.gov.kh',
+
+  // ...existing config
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+  TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
 };
 
 console.log('✅ Config loaded successfully');

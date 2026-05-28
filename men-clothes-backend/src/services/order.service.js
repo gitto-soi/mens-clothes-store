@@ -1,12 +1,16 @@
 import { PrismaClient } from '@prisma/client';
+import {
+  notifyOrderPlaced,
+  notifyOrderPaid,
+  notifyOrderShipped,
+  notifyOrderDelivered,
+} from './telegram.service.js';
 
 const prisma = new PrismaClient();
 
-// Create an order from cart items
 export const createOrder = async (userId, items, totalAmount) => {
-  // Start a transaction to ensure everything succeeds or fails together
   return prisma.$transaction(async (tx) => {
-    // 1. Check stock availability and reserve items
+    // 1. Check stock
     for (const item of items) {
       const variant = await tx.productVariant.findUnique({
         where: { id: item.variantId },
@@ -26,7 +30,7 @@ export const createOrder = async (userId, items, totalAmount) => {
       });
     }
 
-    // 3. Create order with items
+    // 3. Create order
     const order = await tx.order.create({
       data: {
         userId,
@@ -41,14 +45,19 @@ export const createOrder = async (userId, items, totalAmount) => {
           })),
         },
       },
-      include: { items: { include: { product: true, variant: true } } },
+      include: {
+        items: { include: { product: true, variant: true } },
+        user: true,
+      },
     });
+
+    // 4. Notify Telegram
+    notifyOrderPlaced(order).catch(() => {});
 
     return order;
   });
 };
 
-// Get all orders for a user
 export const getUserOrders = async (userId) => {
   return prisma.order.findMany({
     where: { userId },
@@ -57,7 +66,6 @@ export const getUserOrders = async (userId) => {
   });
 };
 
-// Get single order by ID (user must own it or be admin)
 export const getOrderById = async (orderId, userId, isAdmin = false) => {
   const where = { id: orderId };
   if (!isAdmin) where.userId = userId;
@@ -67,27 +75,34 @@ export const getOrderById = async (orderId, userId, isAdmin = false) => {
   });
 };
 
-// Update order status (admin or payment webhook)
+// ✅ Notify on PAID, SHIPPED, DELIVERED
 export const updateOrderStatus = async (orderId, status) => {
-  return prisma.order.update({
+  const order = await prisma.order.update({
     where: { id: orderId },
     data: { status },
+    include: {
+      items: { include: { product: true, variant: true } },
+      user: true,
+    },
   });
+
+  if (status === 'PAID') notifyOrderPaid(order).catch(() => {});
+  if (status === 'SHIPPED') notifyOrderShipped(order).catch(() => {});
+  if (status === 'DELIVERED') notifyOrderDelivered(order).catch(() => {});
+
+  return order;
 };
 
-// Delete an order (only if status is PENDING, for development)
 export const deleteOrder = async (orderId, userId, isAdmin) => {
-  // Fetch order with its items
   const order = await prisma.order.findFirst({
     where: isAdmin ? { id: orderId } : { id: orderId, userId },
-    include: { items: true },   // ← this was missing
+    include: { items: true },
   });
   if (!order) throw new Error('Order not found');
   if (order.status !== 'PENDING') {
     throw new Error('Only pending orders can be deleted');
   }
 
-  // Restore stock for each order item
   for (const item of order.items) {
     await prisma.productVariant.update({
       where: { id: item.variantId },
@@ -95,12 +110,10 @@ export const deleteOrder = async (orderId, userId, isAdmin) => {
     });
   }
 
-  // Delete order items then order
   await prisma.orderItem.deleteMany({ where: { orderId } });
   return prisma.order.delete({ where: { id: orderId } });
 };
 
-// Cancel an order (by user) – restore stock
 export const cancelOrder = async (orderId, userId) => {
   const order = await prisma.order.findFirst({
     where: { id: orderId, userId, status: 'PENDING' },
@@ -116,7 +129,6 @@ export const cancelOrder = async (orderId, userId) => {
   return prisma.order.update({ where: { id: orderId }, data: { status: 'CANCELLED' } });
 };
 
-// Expire pending orders older than 15 minutes – run via cron or on demand
 export const expirePendingOrders = async () => {
   const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
   const expiredOrders = await prisma.order.findMany({

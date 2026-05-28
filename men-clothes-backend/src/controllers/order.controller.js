@@ -23,7 +23,6 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// ✅ Hides PENDING KHQR orders that were never paid
 export const getMyOrders = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -37,12 +36,7 @@ export const getMyOrders = async (req, res) => {
         },
       },
       include: {
-        items: {
-          include: {
-            product: true,
-            variant: true,
-          },
-        },
+        items: { include: { product: true, variant: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -58,9 +52,7 @@ export const getOrder = async (req, res) => {
     const { id } = req.params;
     const isAdmin = req.user.role === 'ADMIN';
     const order = await orderService.getOrderById(id, req.user.id, isAdmin);
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
+    if (!order) return res.status(404).json({ error: 'Order not found' });
     res.json(order);
   } catch (error) {
     console.error(error);
@@ -68,6 +60,7 @@ export const getOrder = async (req, res) => {
   }
 };
 
+// ✅ Telegram fires here for PAID/SHIPPED/DELIVERED via updateOrderStatus service
 export const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -106,7 +99,6 @@ export const cancelOrder = async (req, res) => {
   }
 };
 
-// ✅ Hide unpaid KHQR ghost orders from admin too
 export const getAllOrdersAdmin = async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
@@ -119,12 +111,7 @@ export const getAllOrdersAdmin = async (req, res) => {
         },
       },
       include: {
-        items: {
-          include: {
-            product: true,
-            variant: true,
-          },
-        },
+        items: { include: { product: true, variant: true } },
         user: true,
       },
       orderBy: { createdAt: 'desc' },
