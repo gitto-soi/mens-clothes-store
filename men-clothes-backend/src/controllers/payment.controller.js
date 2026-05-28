@@ -6,6 +6,55 @@ import {
 
 const prisma = new PrismaClient();
 
+// ── Telegram helper ───────────────────────────────────────
+const sendTelegramPaymentConfirmed = async (order) => {
+  try {
+    const token  = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (!token || !chatId) return;
+
+    const itemsList = order.items
+      .map(item => {
+        const name  = item.product?.name  ?? 'Unknown';
+        const size  = item.variant?.size  ?? '';
+        const color = item.variant?.color ?? '';
+        return `• ${name} (${size}/${color}) x${item.quantity} — $${item.priceAtTime}`;
+      })
+      .join('\n');
+
+    const customerName  = order.user?.name  ?? 'Unknown';
+    const customerEmail = order.user?.email ?? 'N/A';
+    const orderId = order.id.slice(0, 8).toUpperCase();
+    const time = new Date().toLocaleString('en-US', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+    });
+
+    const message =
+      `✅ <b>Payment Confirmed — Order #${orderId}</b>\n\n` +
+      `👤 Customer: ${customerName}\n` +
+      `📧 Email: ${customerEmail}\n\n` +
+      `📦 Items:\n${itemsList}\n\n` +
+      `💰 Total: <b>$${order.totalAmount}</b>\n` +
+      `🕐 Time: ${time}`;
+
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id:    chatId,
+        parse_mode: 'HTML',
+        text:       message,
+      }),
+    });
+
+  } catch (err) {
+    console.warn('Telegram notification failed:', err.message);
+  }
+};
+
+// ─────────────────────────────────────────────────────────
+
 export const initiatePayment = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -91,6 +140,17 @@ export const checkPaymentStatus = async (req, res) => {
         where: { id: orderId },
         data: { status: 'PAID' },
       });
+
+      // ✅ Fire Telegram notification on KHQR payment confirmed
+      const fullOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: {
+          items: { include: { product: true, variant: true } },
+          user: true,
+        },
+      });
+      if (fullOrder) await sendTelegramPaymentConfirmed(fullOrder);
+
       return res.json({ status: 'PAID' });
     }
 
@@ -101,7 +161,6 @@ export const checkPaymentStatus = async (req, res) => {
   }
 };
 
-// ✅ FIXED: removed include + simplified transaction to avoid cascade conflict
 export const cancelPayment = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -116,7 +175,6 @@ export const cancelPayment = async (req, res) => {
       return res.status(404).json({ error: 'Order not found or already paid' });
     }
 
-    // ✅ Restore stock first, then delete order items, then delete order — sequentially
     for (const item of order.items) {
       await prisma.productVariant.update({
         where: { id: item.variantId },
