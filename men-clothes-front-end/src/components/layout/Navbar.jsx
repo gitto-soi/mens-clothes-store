@@ -100,19 +100,19 @@ export default function Navbar() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setAccountOpen(!accountOpen)}
-              className="w-14 h-14 rounded-full border-2 border-gray-700 flex items-center justify-center bg-white hover:bg-gray-50 transition-all duration-200"
+              className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center bg-white hover:bg-gray-50 transition-all duration-200"
             >
-              <User className="w-6 h-6 text-gray-700" />
+              <User className="w-4 h-4 text-gray-600" />
             </button>
 
             {accountOpen && (
               <div
-                className="absolute right-0 mt-4 w-72 z-50"
+                className="absolute right-0 mt-3 w-64 z-50"
                 style={{
                   background: '#fff',
                   border: '1px solid #ececec',
-                  borderRadius: '20px',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+                  borderRadius: '16px',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.08)',
                   overflow: 'hidden',
                   animation: 'dropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
