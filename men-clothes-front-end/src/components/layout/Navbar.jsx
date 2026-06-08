@@ -126,9 +126,10 @@ export default function Navbar() {
         .acct-link {
           display: flex;
           align-items: center;
-          gap: 14px;
-          padding: 14px 18px;
-          font-size: 18px;
+          gap: 10px;
+          padding: 10px 14px;
+          font-size: 13px;
+          font-weight: 500;
           color: #2a2a2a;
           text-decoration: none;
           transition: background 0.15s;
@@ -141,13 +142,13 @@ export default function Navbar() {
         }
 
         .acct-link:hover {
-          background: #f5f5f5;
+          background: #f6f6f6;
         }
 
         .acct-icon {
-          width: 34px;
-          height: 34px;
-          border-radius: 8px;
+          width: 24px;
+          height: 24px;
+          border-radius: 7px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -174,98 +175,115 @@ export default function Navbar() {
         .acct-divider {
           height: 1px;
           background: #f2f2f2;
-          margin: 4px 0;
+          margin: 3px 0;
         }
       `}</style>
 
                 {user ? (
                   <>
-                    {/* User identity block */}
-                    <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #f2f2f2' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                        {/* Avatar */}
-                        <div style={{
-                          width: 40, height: 40,
-                          borderRadius: '10px',
-                          background: '#f0f0f0',
-                          color: '#1a1a1a',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 13, fontWeight: 600,
-                          letterSpacing: '0.05em',
-                          flexShrink: 0,
-                          border: '1px solid #e8e8e8',
-                        }}>
-                          {(user.firstName?.[0] || '').toUpperCase()}{(user.lastName?.[0] || '').toUpperCase()}
+                    <div style={{ padding: '14px 14px 11px', borderBottom: '1px solid #f2f2f2' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: '10px',
+                            background: '#f5f5f5',
+                            color: '#1a1a1a',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            letterSpacing: '0.04em',
+                            flexShrink: 0,
+                            border: '1px solid #e8e8e8',
+                          }}
+                        >
+                          {(user.firstName?.[0] || '').toUpperCase()}
+                          {(user.lastName?.[0] || '').toUpperCase()}
                         </div>
+
                         <div style={{ overflow: 'hidden' }}>
-                          <p style={{ fontSize: 13.5, fontWeight: 600, color: '#1a1a1a', margin: 0, lineHeight: 1.3 }}>
+                          <p
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 600,
+                              color: '#1a1a1a',
+                              margin: 0,
+                              lineHeight: 1.3,
+                            }}
+                          >
                             {user.firstName} {user.lastName}
                           </p>
-                          <p style={{
-                            fontSize: 11, color: '#aaa', margin: '2px 0 0',
-                            letterSpacing: '0.01em', whiteSpace: 'nowrap',
-                            overflow: 'hidden', textOverflow: 'ellipsis',
-                          }}>
+
+                          <p
+                            style={{
+                              fontSize: 11,
+                              color: '#999',
+                              margin: '2px 0 0',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
                             {user.email}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Menu items */}
-                    <div style={{ padding: '8px' }}>
+                    <div style={{ padding: '6px' }}>
                       <Link to="/profile" onClick={() => setAccountOpen(false)} className="acct-link">
-                        <span className="acct-icon"><User size={14} /></span>
+                        <span className="acct-icon">
+                          <User size={13} />
+                        </span>
                         My Profile
                       </Link>
+
                       <Link to="/orders" onClick={() => setAccountOpen(false)} className="acct-link">
-                        <span className="acct-icon"><Package size={14} /></span>
+                        <span className="acct-icon">
+                          <Package size={13} />
+                        </span>
                         My Orders
                       </Link>
                     </div>
 
                     <div className="acct-divider" />
 
-                    {/* Logout */}
-                    <div style={{ padding: '4px 8px 8px' }}>
+                    <div style={{ padding: '4px 6px 6px' }}>
                       <button onClick={handleLogout} className="acct-link danger">
-                        <span className="acct-icon"><LogOut size={14} /></span>
+                        <span className="acct-icon">
+                          <LogOut size={13} />
+                        </span>
                         Sign out
                       </button>
                     </div>
                   </>
                 ) : (
                   <>
-                    {/* Guest header */}
-                    <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #f2f2f2' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                        <div style={{
-                          width: 40, height: 40,
-                          borderRadius: '10px',
-                          background: '#f5f5f5',
-                          border: '1px solid #e8e8e8',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          flexShrink: 0,
-                        }}>
-                          <User size={16} color="#999" />
-                        </div>
-                        <div>
-                          <p style={{ fontSize: 13.5, fontWeight: 600, color: '#1a1a1a', margin: 0 }}>Welcome</p>
-                          <p style={{ fontSize: 11, color: '#aaa', margin: '2px 0 0', lineHeight: 1.5 }}>
-                            Sign in for a better experience
-                          </p>
-                        </div>
-                      </div>
+                    <div style={{ padding: '14px 14px 11px', borderBottom: '1px solid #f2f2f2' }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', margin: 0 }}>
+                        Welcome
+                      </p>
+
+                      <p style={{ fontSize: 12, color: '#777', margin: '3px 0 0', lineHeight: 1.4 }}>
+                        Sign in for a better experience
+                      </p>
                     </div>
 
-                    {/* Guest actions */}
-                    <div style={{ padding: '8px' }}>
+                    <div style={{ padding: '6px' }}>
                       <Link to="/login" onClick={() => setAccountOpen(false)} className="acct-link">
-                        <span className="acct-icon"><User size={14} /></span>
+                        <span className="acct-icon">
+                          <User size={13} />
+                        </span>
                         Sign in
                       </Link>
+
                       <Link to="/register" onClick={() => setAccountOpen(false)} className="acct-link">
-                        <span className="acct-icon"><UserPlus size={14} /></span>
+                        <span className="acct-icon">
+                          <UserPlus size={13} />
+                        </span>
                         Create account
                       </Link>
                     </div>
