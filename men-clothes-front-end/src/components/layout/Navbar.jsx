@@ -82,11 +82,10 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled
+      className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled
           ? 'bg-white/90 backdrop-blur-md shadow-premium'
           : 'bg-white shadow-sm'
-      }`}
+        }`}
     >
       <div className="container-premium py-3 flex justify-between items-center">
         {/* Logo */}
@@ -140,109 +139,79 @@ export default function Navbar() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setAccountOpen(!accountOpen)}
-              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-brand-50 transition"
+              className="flex items-center justify-center p-1 rounded-full hover:bg-gray-100 transition"
             >
-              <div className="w-8 h-8 rounded-full bg-brand-100 border border-brand-200 flex items-center justify-center">
-                {user ? (
-                  <span className="text-xs font-bold text-brand-700 uppercase">
-                    {firstInitial}
-                  </span>
-                ) : (
-                  <User className="w-4 h-4 text-brand-500" />
-                )}
+              <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center">
+                <User className="w-5 h-5 text-gray-600" />
               </div>
             </button>
 
             {accountOpen && (
-              <div className="absolute right-0 top-12 w-56 bg-white rounded-2xl shadow-xl border border-brand-100 overflow-hidden z-50">
+              <div className="absolute right-0 top-12 w-72 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50">
                 {user ? (
                   <>
-                    {/* User Info */}
-                    <div className="px-4 py-3 border-b border-brand-50 bg-brand-50/50">
-                      <p className="text-sm font-semibold text-brand-900 truncate">
+                    <div className="px-5 py-4 border-b border-gray-100">
+                      <p className="text-base font-semibold text-gray-900">
                         {user.firstName} {user.lastName}
                       </p>
-                      <p className="text-xs text-brand-400 mt-0.5 truncate">
+                      <p className="text-sm text-gray-500 mt-1 truncate">
                         {user.email}
                       </p>
                     </div>
 
-                    {/* Menu Items */}
-                    <div className="p-2">
-                      {user.role === 'ADMIN' && (
-                        <Link
-                          to="/admin"
-                          onClick={() => setAccountOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-brand-700 hover:bg-brand-50 transition"
-                        >
-                          <Settings className="w-4 h-4" />
-                          Admin Panel
-                        </Link>
-                      )}
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setAccountOpen(false)}
+                        className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
+                      >
+                        <User className="w-5 h-5" />
+                        My Profile
+                      </Link>
 
                       <Link
                         to="/orders"
                         onClick={() => setAccountOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-brand-700 hover:bg-brand-50 transition"
+                        className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
                       >
-                        <Package className="w-4 h-4" />
+                        <Package className="w-5 h-5" />
                         My Orders
-                      </Link>
-
-                      <Link
-                        to="/wishlist"
-                        onClick={() => setAccountOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-brand-700 hover:bg-brand-50 transition"
-                      >
-                        <Heart className="w-4 h-4" />
-                        Wishlist
-                      </Link>
-
-                      <Link
-                        to="/profile"
-                        onClick={() => setAccountOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-brand-700 hover:bg-brand-50 transition"
-                      >
-                        <User className="w-4 h-4" />
-                        Profile
                       </Link>
 
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition mt-1 border-t border-brand-50"
+                        className="w-full flex items-center gap-4 px-5 py-3 text-base text-red-500 hover:bg-red-50 transition border-t border-gray-100"
                       >
-                        <LogOut className="w-4 h-4" />
+                        <LogOut className="w-5 h-5" />
                         Sign out
                       </button>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="px-4 py-3 border-b border-brand-50">
-                      <p className="text-sm font-semibold text-brand-900">
-                        Welcome
-                      </p>
-                      <p className="text-xs text-brand-400 mt-0.5">
+                    <div className="px-5 py-4 border-b border-gray-100">
+                      <p className="text-base font-semibold text-gray-900">Welcome</p>
+                      <p className="text-sm text-gray-500 mt-1">
                         Sign in for a better experience
                       </p>
                     </div>
 
-                    <div className="p-2">
+                    <div className="py-2">
                       <Link
                         to="/login"
                         onClick={() => setAccountOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-brand-700 hover:bg-brand-50 transition"
+                        className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
                       >
-                        <User className="w-4 h-4" />
+                        <User className="w-5 h-5" />
                         Sign in
                       </Link>
 
                       <Link
                         to="/register"
                         onClick={() => setAccountOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-brand-700 hover:bg-brand-50 transition"
+                        className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
                       >
-                        <UserPlus className="w-4 h-4" />
+                        <UserPlus className="w-5 h-5" />
                         Create account
                       </Link>
                     </div>
