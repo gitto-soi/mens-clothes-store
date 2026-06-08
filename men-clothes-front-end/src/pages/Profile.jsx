@@ -113,7 +113,7 @@ export default function Profile() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-4 sm:py-6 lg:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-3 sm:py-6 lg:py-8">
       <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
           {/* Sidebar */}
@@ -144,11 +144,10 @@ export default function Profile() {
                   <Link
                     key={item.label}
                     to={item.path}
-                    className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm transition ${
-                      item.active
+                    className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm transition ${item.active
                         ? 'bg-gray-50 text-gray-900 border-r-2 border-gray-900'
                         : 'text-gray-600 hover:bg-gray-50'
-                    } ${item.soon ? 'opacity-50 pointer-events-none' : ''}`}
+                      } ${item.soon ? 'opacity-50 pointer-events-none' : ''}`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -202,7 +201,7 @@ export default function Profile() {
           </aside>
 
           {/* Main content */}
-          <main className="flex-1 bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 md:p-8">
+          <main className="flex-1 bg-white rounded-2xl shadow-lg border border-gray-100 p-5 sm:p-6 md:p-8">
             <h1 className="text-xl sm:text-2xl font-light text-gray-900 mb-6">
               Profile Information
             </h1>
@@ -316,7 +315,7 @@ export default function Profile() {
                   onChange={(e) =>
                     setForm({ ...form, dateOfBirth: e.target.value })
                   }
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-gray-800 focus:border-transparent outline-none"
+                  className="w-full h-[48px] appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm sm:text-base text-gray-900 focus:ring-2 focus:ring-gray-800 focus:border-transparent outline-none"
                 />
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">
                   Add your birthday to unlock additional offering/reward!
@@ -335,11 +334,10 @@ export default function Profile() {
 
               {message.text && (
                 <div
-                  className={`mt-4 p-3 rounded-xl text-sm flex items-start gap-2 ${
-                    message.type === 'success'
+                  className={`mt-4 p-3 rounded-xl text-sm flex items-start gap-2 ${message.type === 'success'
                       ? 'bg-green-50 text-green-700 border border-green-200'
                       : 'bg-red-50 text-red-700 border border-red-200'
-                  }`}
+                    }`}
                 >
                   <span>{message.type === 'success' ? '✓' : '⚠️'}</span>
                   <span>{message.text}</span>
