@@ -160,6 +160,18 @@ export default function Navbar() {
                     </div>
 
                     <div className="py-2">
+
+                      {user?.role === 'ADMIN' && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
+                        >
+                          <Settings className="w-5 h-5" />
+                          Admin Dashboard
+                        </Link>
+                      )}
+
                       <Link
                         to="/profile"
                         onClick={() => setAccountOpen(false)}
