@@ -301,13 +301,13 @@ export default function Navbar() {
                     My Orders
                   </Link>
 
-                  <Link
+                  {/* <Link
                     to="/wishlist"
                     onClick={() => setMobileMenuOpen(false)}
                     className="text-brand-700 hover:text-brand-900 py-2 text-sm"
                   >
                     Wishlist ❤️
-                  </Link>
+                  </Link> */}
 
                   <button
                     onClick={() => {
