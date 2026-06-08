@@ -120,13 +120,11 @@ export default function Profile() {
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mt-5 p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Globe className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">ភាសា / Languages</span>
+                <span className="text-sm font-medium text-gray-700">Languages</span>
               </div>
               <div className="space-y-2">
                 {[
-                  { value: 'english', label: 'English' },
-                  { value: 'khmer', label: 'ខ្មែរ' },
-                  { value: 'chinese', label: '中文' },
+                  { value: 'english', label: 'English' }
                 ].map((lang) => (
                   <label key={lang.value} className="flex items-center gap-2 text-sm text-gray-600">
                     <input
