@@ -147,14 +147,14 @@ export default function Navbar() {
             </button>
 
             {accountOpen && (
-              <div className="absolute right-0 top-11 w-56 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50">
+              <div className="absolute right-0 top-11 w-52 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden z-50">
                 {user ? (
                   <>
-                    <div className="px-5 py-4 border-b border-gray-100">
-                      <p className="text-base font-semibold text-gray-900">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-900">
                         {user.firstName} {user.lastName}
                       </p>
-                      <p className="text-sm text-gray-500 mt-1 truncate">
+                      <p className="text-xs text-gray-500 mt-0.5 truncate">
                         {user.email}
                       </p>
                     </div>
@@ -165,9 +165,9 @@ export default function Navbar() {
                         <Link
                           to="/admin"
                           onClick={() => setAccountOpen(false)}
-                          className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-50 transition"
                         >
-                          <Settings className="w-5 h-5" />
+                          <Settings className="w-4 h-4" />
                           Admin Dashboard
                         </Link>
                       )}
@@ -175,26 +175,26 @@ export default function Navbar() {
                       <Link
                         to="/profile"
                         onClick={() => setAccountOpen(false)}
-                        className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-50 transition"
                       >
-                        <User className="w-5 h-5" />
+                        <User className="w-4 h-4" />
                         My Profile
                       </Link>
 
                       <Link
                         to="/orders"
                         onClick={() => setAccountOpen(false)}
-                        className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-50 transition"
                       >
-                        <Package className="w-5 h-5" />
+                        <Package className="w-4 h-4" />
                         My Orders
                       </Link>
 
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-4 px-5 py-3 text-base text-red-500 hover:bg-red-50 transition border-t border-gray-100"
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition border-t border-gray-100"
                       >
-                        <LogOut className="w-5 h-5" />
+                        <LogOut className="w-4 h-4" />
                         Sign out
                       </button>
                     </div>
@@ -214,7 +214,7 @@ export default function Navbar() {
                         onClick={() => setAccountOpen(false)}
                         className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-800 hover:bg-gray-50 transition"
                       >
-                        <User className="w-5 h-5" />
+                        <User className="w-4 h-4" />
                         Sign in
                       </Link>
 
@@ -223,7 +223,7 @@ export default function Navbar() {
                         onClick={() => setAccountOpen(false)}
                         className="flex items-center gap-4 px-5 py-3 text-base text-gray-800 hover:bg-gray-50 transition"
                       >
-                        <UserPlus className="w-5 h-5" />
+                        <UserPlus className="w-4 h-4" />
                         Create account
                       </Link>
                     </div>
