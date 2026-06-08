@@ -100,34 +100,37 @@ export default function Navbar() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setAccountOpen(!accountOpen)}
-              className="relative text-brand-600 hover:text-brand-900 transition"
+              className="w-14 h-14 rounded-full border-2 border-gray-700 flex items-center justify-center bg-white hover:bg-gray-50 transition-all duration-200"
             >
-              <User className="w-5 h-5" />
+              <User className="w-6 h-6 text-gray-700" />
             </button>
 
             {accountOpen && (
-              <div className="absolute right-0 mt-3 w-64 z-50" style={{
-                background: '#fff',
-                border: '1px solid #ececec',
-                borderRadius: '12px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.05)',
-                overflow: 'hidden',
-                animation: 'dropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-              }}>
+              <div
+                className="absolute right-0 mt-4 w-72 z-50"
+                style={{
+                  background: '#fff',
+                  border: '1px solid #ececec',
+                  borderRadius: '20px',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.12)',
+                  overflow: 'hidden',
+                  animation: 'dropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+              >
                 <style>{`
         @keyframes dropIn {
           from { opacity: 0; transform: translateY(-8px) scale(0.97); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
+
         .acct-link {
           display: flex;
           align-items: center;
-          gap: 10px;
-          padding: 9px 12px;
-          font-size: 13px;
+          gap: 14px;
+          padding: 14px 18px;
+          font-size: 18px;
           color: #2a2a2a;
           text-decoration: none;
-          letter-spacing: 0.01em;
           transition: background 0.15s;
           background: transparent;
           width: 100%;
@@ -135,24 +138,44 @@ export default function Navbar() {
           cursor: pointer;
           text-align: left;
           font-family: inherit;
-          border-radius: 8px;
         }
-        .acct-link:hover { background: #f5f5f5; }
-        .acct-icon {
-          width: 30px; height: 30px;
-          border-radius: 8px;
+
+        .acct-link:hover {
           background: #f5f5f5;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-          transition: background 0.15s;
         }
-        .acct-link:hover .acct-icon { background: #ebebeb; }
-        .acct-link svg { color: #555; }
-        .acct-link.danger { color: #c0392b; }
-        .acct-link.danger .acct-icon { background: #fff0f0; }
-        .acct-link.danger svg { color: #c0392b; }
-        .acct-link.danger:hover { background: #fff5f5; }
-        .acct-divider { height: 1px; background: #f2f2f2; margin: 4px 8px; }
+
+        .acct-icon {
+          width: 34px;
+          height: 34px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          background: transparent;
+        }
+
+        .acct-link svg {
+          color: #333;
+        }
+
+        .acct-link.danger {
+          color: #c0392b;
+        }
+
+        .acct-link.danger svg {
+          color: #c0392b;
+        }
+
+        .acct-link.danger:hover {
+          background: #fff5f5;
+        }
+
+        .acct-divider {
+          height: 1px;
+          background: #f2f2f2;
+          margin: 4px 0;
+        }
       `}</style>
 
                 {user ? (
