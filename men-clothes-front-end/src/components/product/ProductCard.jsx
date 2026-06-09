@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
-import useAuthStore from '../store/authStore';
-import useWishlistStore from '../store/wishlistStore';
+import useAuthStore from '../../store/authStore';
+import useWishlistStore from '../../store/wishlistStore';
 
 export default function ProductCard({ product }) {
   const navigate = useNavigate();
