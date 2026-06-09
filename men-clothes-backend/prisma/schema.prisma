@@ -80,6 +80,10 @@ model Order {
 
   user         User        @relation(fields: [userId], references: [id])
   items        OrderItem[]
+
+  shippingAddress Json?
+  contactMethod    String?
+  paymentMethod    String?
 }
 
 model OrderItem {

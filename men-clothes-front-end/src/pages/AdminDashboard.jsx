@@ -783,62 +783,166 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl">
               <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Order #{selectedOrder.id.slice(0, 8)}</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Order #{selectedOrder.id.slice(0, 8)}
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(selectedOrder.createdAt).toLocaleString()}
+                  </p>
                 </div>
+
                 <div className="flex items-center gap-3">
-                  <span className={'text-xs px-3 py-1 rounded-full font-medium ' + (statusStyles[selectedOrder.status] || 'bg-gray-100 text-gray-600')}>
+                  <span
+                    className={
+                      'text-xs px-3 py-1 rounded-full font-medium ' +
+                      (statusStyles[selectedOrder.status] || 'bg-gray-100 text-gray-600')
+                    }
+                  >
                     {selectedOrder.status}
                   </span>
-                  <button onClick={() => setSelectedOrder(null)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+
+                  <button
+                    onClick={() => setSelectedOrder(null)}
+                    className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
                     <X size={18} />
                   </button>
                 </div>
               </div>
+
               <div className="p-6 space-y-5">
+                {/* Customer */}
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">👤 Customer</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {selectedOrder.user?.name || (selectedOrder.user?.firstName + ' ' + selectedOrder.user?.lastName).trim()}
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                    👤 Customer
                   </p>
-                  <p className="text-sm text-gray-500 mt-0.5">{selectedOrder.user?.email}</p>
-                  {selectedOrder.user?.phone && <p className="text-sm text-gray-500 mt-0.5">📞 {selectedOrder.user.phone}</p>}
+
+                  <p className="text-sm font-semibold text-gray-900">
+                    {selectedOrder.user?.name ||
+                      `${selectedOrder.user?.firstName || ''} ${selectedOrder.user?.lastName || ''}`.trim() ||
+                      'Unknown Customer'}
+                  </p>
+
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {selectedOrder.user?.email || 'No email'}
+                  </p>
+
+                  {selectedOrder.user?.phone && (
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      📞 {selectedOrder.user.phone}
+                    </p>
+                  )}
                 </div>
 
+                {/* Shipping Address */}
+                {selectedOrder.shippingAddress && (
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                      📍 Shipping Address
+                    </p>
+
+                    <p className="text-sm font-semibold text-gray-900">
+                      {selectedOrder.shippingAddress.firstName}{' '}
+                      {selectedOrder.shippingAddress.lastName}
+                    </p>
+
+                    {selectedOrder.shippingAddress.phone && (
+                      <p className="text-sm text-gray-500 mt-0.5">
+                        📞 {selectedOrder.shippingAddress.phone}
+                      </p>
+                    )}
+
+                    <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                      {selectedOrder.shippingAddress.address}
+                      {selectedOrder.shippingAddress.city &&
+                        `, ${selectedOrder.shippingAddress.city}`}
+                      {selectedOrder.shippingAddress.country &&
+                        `, ${selectedOrder.shippingAddress.country}`}
+                    </p>
+
+                    {selectedOrder.contactMethod && (
+                      <p className="text-xs text-gray-400 mt-2 capitalize">
+                        Preferred contact: {selectedOrder.contactMethod}
+                      </p>
+                    )}
+
+                    {selectedOrder.paymentMethod && (
+                      <p className="text-xs text-gray-400 mt-1 uppercase">
+                        Payment method: {selectedOrder.paymentMethod}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Items */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">📦 Items</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                    📦 Items
+                  </p>
+
                   <div className="space-y-3">
-                    {selectedOrder.items?.map(item => (
-                      <div key={item.id} className="flex gap-3 items-center bg-gray-50 rounded-xl p-3">
-                        <img src={item.product?.images?.[0] || 'https://via.placeholder.com/60'} alt={item.product?.name} className="w-14 h-14 object-cover rounded-lg border border-gray-100" />
+                    {selectedOrder.items?.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex gap-3 items-center bg-gray-50 rounded-xl p-3"
+                      >
+                        <img
+                          src={item.product?.images?.[0] || 'https://via.placeholder.com/60'}
+                          alt={item.product?.name}
+                          className="w-14 h-14 object-cover rounded-lg border border-gray-100"
+                        />
+
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{item.product?.name}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{item.variant?.size} / {item.variant?.color} · Qty: {item.quantity}</p>
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {item.product?.name}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {item.variant?.size} / {item.variant?.color} · Qty:{' '}
+                            {item.quantity}
+                          </p>
                         </div>
+
                         <div className="text-right">
-                          <p className="text-sm font-semibold text-gray-900">${(item.priceAtTime * item.quantity).toFixed(2)}</p>
-                          <p className="text-xs text-gray-400">${item.priceAtTime.toFixed(2)} each</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            ${(item.priceAtTime * item.quantity).toFixed(2)}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            ${item.priceAtTime.toFixed(2)} each
+                          </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
+                {/* Total */}
                 <div className="flex justify-between items-center pt-3 border-t border-gray-100">
                   <p className="text-sm font-semibold text-gray-600">Total</p>
-                  <p className="text-xl font-bold text-gray-900">${selectedOrder.totalAmount.toFixed(2)}</p>
+                  <p className="text-xl font-bold text-gray-900">
+                    ${selectedOrder.totalAmount.toFixed(2)}
+                  </p>
                 </div>
 
+                {/* Update Status */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Update Status</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                    Update Status
+                  </p>
+
                   <select
                     className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
                     value={selectedOrder.status}
-                    onChange={async e => {
+                    onChange={async (e) => {
                       await handleUpdateOrderStatus(selectedOrder.id, e.target.value);
-                      setSelectedOrder(prev => ({ ...prev, status: e.target.value }));
+                      setSelectedOrder((prev) => ({
+                        ...prev,
+                        status: e.target.value,
+                      }));
                     }}
-                    disabled={selectedOrder.status === 'DELIVERED' || selectedOrder.status === 'CANCELLED'}
+                    disabled={
+                      selectedOrder.status === 'DELIVERED' ||
+                      selectedOrder.status === 'CANCELLED'
+                    }
                   >
                     <option value="PENDING">Pending</option>
                     <option value="PAID">Paid</option>

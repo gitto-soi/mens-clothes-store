@@ -3,7 +3,14 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 // Create an order from cart items
-export const createOrder = async (userId, items, totalAmount) => {
+export const createOrder = async (
+  userId,
+  items,
+  totalAmount,
+  shippingAddress,
+  contactMethod,
+  paymentMethod
+) => {
   // Start a transaction to ensure everything succeeds or fails together
   return prisma.$transaction(async (tx) => {
     // 1. Check stock availability and reserve items
@@ -32,6 +39,9 @@ export const createOrder = async (userId, items, totalAmount) => {
         userId,
         totalAmount,
         status: 'PENDING',
+        shippingAddress,
+        contactMethod,
+        paymentMethod,
         items: {
           create: items.map(item => ({
             productId: item.productId,

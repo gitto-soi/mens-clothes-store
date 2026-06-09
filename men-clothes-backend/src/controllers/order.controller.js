@@ -6,13 +6,13 @@ const prisma = new PrismaClient();
 // ── Telegram helper ───────────────────────────────────────
 const sendTelegramNotification = async (order, status) => {
   try {
-    const token  = process.env.TELEGRAM_BOT_TOKEN;
+    const token = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
     if (!token || !chatId) return;
 
     const statusConfig = {
-      PAID:      { emoji: '✅', label: 'Payment Confirmed' },
-      SHIPPED:   { emoji: '🚚', label: 'Order Shipped' },
+      PAID: { emoji: '✅', label: 'Payment Confirmed' },
+      SHIPPED: { emoji: '🚚', label: 'Order Shipped' },
       DELIVERED: { emoji: '📬', label: 'Order Delivered' },
     };
 
@@ -20,8 +20,8 @@ const sendTelegramNotification = async (order, status) => {
 
     const itemsList = order.items
       .map(item => {
-        const name  = item.product?.name  ?? 'Unknown';
-        const size  = item.variant?.size  ?? '';
+        const name = item.product?.name ?? 'Unknown';
+        const size = item.variant?.size ?? '';
         const color = item.variant?.color ?? '';
         return `• ${name} (${size}/${color}) x${item.quantity} — $${item.priceAtTime}`;
       })
@@ -47,9 +47,9 @@ const sendTelegramNotification = async (order, status) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chat_id:    chatId,
+        chat_id: chatId,
         parse_mode: 'HTML',
-        text:       message,
+        text: message,
       }),
     });
 
@@ -62,7 +62,7 @@ const sendTelegramNotification = async (order, status) => {
 
 export const createOrder = async (req, res) => {
   try {
-    const { items, totalAmount } = req.body;
+    const { items, totalAmount, shippingAddress, contactMethod, paymentMethod } = req.body;
     const userId = req.user.id;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -72,7 +72,14 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ error: 'Valid total amount is required' });
     }
 
-    const order = await orderService.createOrder(userId, items, totalAmount);
+    const order = await orderService.createOrder(
+      userId,
+      items,
+      totalAmount,
+      shippingAddress,
+      contactMethod,
+      paymentMethod
+    );
     res.status(201).json(order);
   } catch (error) {
     console.error('Create order error:', error);
