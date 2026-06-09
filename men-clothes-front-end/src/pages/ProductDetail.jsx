@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import useCartStore from '../store/cartStore';
 import toast from 'react-hot-toast';
-import { ChevronLeft, ChevronRight, Minus, Plus, Truck, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus, Truck, ShieldCheck, ArrowLeft, Heart } from 'lucide-react';
+import useAuthStore from '../store/authStore';
+import useWishlistStore from '../store/wishlistStore';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -15,7 +17,26 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const addItem = useCartStore((state) => state.addItem);
 
+  const { user } = useAuthStore();
+  const { isWishlisted, toggleWishlist } = useWishlistStore();
+  const wished = product ? isWishlisted(product.id) : false;
+
   useEffect(() => { fetchProduct(); }, [id]);
+
+  const handleWishlist = async () => {
+    if (!user) {
+      toast.error('Please login to save wishlist');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await toggleWishlist(product.id);
+      toast.success(wished ? 'Removed from wishlist' : 'Added to wishlist');
+    } catch {
+      toast.error('Wishlist update failed');
+    }
+  };
 
   const fetchProduct = async () => {
     setLoading(true);
@@ -154,6 +175,16 @@ export default function ProductDetail() {
 
             {/* Price */}
             <p className="text-2xl font-semibold text-brand-900">${product.price}</p>
+
+            <button
+              onClick={handleWishlist}
+              className="w-11 h-11 rounded-full border border-brand-200 flex items-center justify-center hover:border-red-400 hover:text-red-500 transition"
+            >
+              <Heart
+                className={`w-5 h-5 ${wished ? 'text-red-500 fill-red-500' : 'text-brand-600'
+                  }`}
+              />
+            </button>
 
             {/* Divider */}
             <div className="h-px bg-brand-100" />

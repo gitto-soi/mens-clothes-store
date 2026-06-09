@@ -20,6 +20,7 @@ import Profile from './pages/Profile';
 import AddressBook from './pages/AddressBook';
 import ChangePassword from './pages/ChnagePassword';
 import ToastProvider from './components/ui/ToastProvider';
+import Wishlist from './pages/Wishlist';
 
 // ✅ For pages that require login (cart, checkout, orders, profile, etc.)
 function ProtectedLayout({ children }) {
@@ -83,6 +84,14 @@ function App() {
         <Route path="/profile" element={<ProtectedLayout><Profile /></ProtectedLayout>} />
         <Route path="/address-book" element={<ProtectedLayout><AddressBook /></ProtectedLayout>} />
         <Route path="/change-password" element={<ProtectedLayout><ChangePassword /></ProtectedLayout>} />
+        <Route
+          path="/wishlist"
+          element={
+            <ProtectedLayout>
+              <Wishlist />
+            </ProtectedLayout>
+          }
+        />
 
         {/* 🔒 Admin only */}
         <Route

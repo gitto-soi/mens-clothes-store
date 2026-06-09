@@ -13,6 +13,7 @@ import paymentRoutes from './routes/payment.routes.js';
 import addressRoutes from './routes/address.routes.js';
 import brandRoutes from './routes/brand.routes.js';
 import categoryRoutes from './routes/category.routes.js';
+import wishlistRoutes from './routes/wishlist.routes.js';
 
 
 const app = express();
@@ -69,6 +70,8 @@ app.use('/api/addresses', addressRoutes);
 
 app.use('/api/brands', brandRoutes);
 app.use('/api/categories', categoryRoutes);
+
+app.use('/api/wishlist', wishlistRoutes);
 
 // Health check with database
 app.get('/api/health', async (req, res) => {

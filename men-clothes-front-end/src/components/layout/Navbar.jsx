@@ -14,6 +14,7 @@ import {
 import useAuthStore from '../../store/authStore';
 import useCartStore from '../../store/cartStore';
 import api from '../../lib/api';
+import useWishlistStore from '../../store/wishlistStore';
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -25,6 +26,15 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  const wishlistItems = useWishlistStore((state) => state.items) || [];
+  const fetchWishlist = useWishlistStore((state) => state.fetchWishlist);
+
+  useEffect(() => {
+    if (user) {
+      fetchWishlist();
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -114,12 +124,18 @@ export default function Navbar() {
         {/* Right Side */}
         <div className="flex items-center gap-3">
           {/* Wishlist */}
-          {/* <Link
+          <Link
             to="/wishlist"
             className="relative p-2 text-brand-600 hover:text-red-500 transition"
           >
             <Heart className="w-5 h-5" />
-          </Link> */}
+
+            {wishlistItems.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {wishlistItems.length}
+              </span>
+            )}
+          </Link>
 
           {/* Cart */}
           <Link
