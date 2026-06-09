@@ -16,10 +16,11 @@ const sendTelegramNotification = async (order, status) => {
       DELIVERED: { emoji: '📬', label: 'Order Delivered' },
     };
 
-    const { emoji, label } = statusConfig[status] || { emoji: '📋', label: 'Order Updated' };
+    const { emoji, label } =
+      statusConfig[status] || { emoji: '📋', label: 'Order Updated' };
 
     const itemsList = order.items
-      .map(item => {
+      .map((item) => {
         const name = item.product?.name ?? 'Unknown';
         const size = item.variant?.size ?? '';
         const color = item.variant?.color ?? '';
@@ -27,19 +28,62 @@ const sendTelegramNotification = async (order, status) => {
       })
       .join('\n');
 
-    const customerName = order.user?.name ?? 'Unknown';
+    const address = order.shippingAddress || {};
+
+    const customerName =
+      order.user?.name ||
+      `${order.user?.firstName || ''} ${order.user?.lastName || ''}`.trim() ||
+      `${address.firstName || ''} ${address.lastName || ''}`.trim() ||
+      'Unknown';
+
     const customerEmail = order.user?.email ?? 'N/A';
+
+    const customerPhone =
+      address.phone ||
+      order.user?.phone ||
+      'N/A';
+
+    const fullAddress = [
+      address.address,
+      address.city,
+      address.country,
+    ]
+      .filter(Boolean)
+      .join(', ');
+
+    const paymentMethod = order.paymentMethod
+      ? order.paymentMethod.toUpperCase()
+      : 'N/A';
+
+    const contactMethod = order.contactMethod
+      ? order.contactMethod.charAt(0).toUpperCase() + order.contactMethod.slice(1)
+      : 'N/A';
+
     const orderId = order.id.slice(0, 8).toUpperCase();
+
     const time = new Date().toLocaleString('en-US', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', hour12: true,
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
     });
 
     const message =
       `${emoji} <b>${label} — Order #${orderId}</b>\n\n` +
+
       `👤 Customer: ${customerName}\n` +
-      `📧 Email: ${customerEmail}\n\n` +
+      `📧 Email: ${customerEmail}\n` +
+      `📞 Phone: ${customerPhone}\n\n` +
+
+      `📍 Address:\n${fullAddress || 'N/A'}\n\n` +
+
+      `💳 Payment: ${paymentMethod}\n` +
+      `📱 Contact: ${contactMethod}\n\n` +
+
       `📦 Items:\n${itemsList}\n\n` +
+
       `💰 Total: <b>$${order.totalAmount}</b>\n` +
       `🕐 Time: ${time}`;
 
@@ -52,7 +96,6 @@ const sendTelegramNotification = async (order, status) => {
         text: message,
       }),
     });
-
   } catch (err) {
     console.warn('Telegram notification failed:', err.message);
   }
